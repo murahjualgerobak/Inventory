@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#185FA5" />
+<title>Inventory App</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #eeede8;
+    --text: #1a1a18;
+    --text2: #5f5e5a;
+    --text3: #888780;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --blue: #185FA5;
+    --blue-dark: #0C447C;
+    --blue-bg: #E6F1FB;
+    --blue-text: #0C447C;
+    --green-bg: #EAF3DE;
+    --green-text: #27500A;
+    --amber-bg: #FAEEDA;
+    --amber-text: #633806;
+    --red-bg: #FCEBEB;
+    --red-text: #791F1F;
+    --danger: #E24B4A;
+    --danger-bg: #FCEBEB;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c;
+      --bg2: #2a2a28;
+      --bg3: #333330;
+      --text: #f0ede8;
+      --text2: #b4b2a9;
+      --text3: #888780;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.2);
+      --blue: #378ADD;
+      --blue-dark: #85B7EB;
+      --blue-bg: #0C447C;
+      --blue-text: #B5D4F4;
+      --green-bg: #27500A;
+      --green-text: #C0DD97;
+      --amber-bg: #633806;
+      --amber-text: #FAC775;
+      --red-bg: #791F1F;
+      --red-text: #F7C1C1;
+      --danger: #F09595;
+      --danger-bg: #501313;
+    }
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg2);
+    color: var(--text);
+    font-size: 14px;
+    min-height: 100vh;
+  }
+  header {
+    background: var(--bg);
+    border-bottom: 0.5px solid var(--border);
+    padding: 0 1rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+  }
+  header .icon-wrap {
+    width: 32px; height: 32px;
+    background: var(--blue-bg);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  header .icon-wrap svg { width: 18px; height: 18px; stroke: var(--blue); }
+  .main { padding: 1rem; max-width: 700px; margin: 0 auto; }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+  .stat {
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    padding: 14px;
+    border: 0.5px solid var(--border);
+  }
+  .stat-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .stat-val { font-size: 20px; font-weight: 600; color: var(--text); }
+  .stat-val.warn { color: #BA7517; }
+  @media (prefers-color-scheme: dark) { .stat-val.warn { color: #FAC775; } }
+  .toolbar {
+    display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap;
+  }
+  .toolbar input, .toolbar select {
+    background: var(--bg);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 0 12px;
+    height: 38px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+  }
+  .toolbar input { flex: 1; min-width: 140px; }
+  .toolbar select { min-width: 130px; }
+  .toolbar input:focus, .toolbar select:focus { border-color: var(--blue); }
+  .add-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--blue); color: #fff;
+    border: none; border-radius: var(--radius);
+    padding: 0 16px; height: 38px;
+    cursor: pointer; font-size: 14px; font-weight: 500;
+    white-space: nowrap;
+  }
+  .add-btn:hover { background: var(--blue-dark); }
+  .add-btn svg { width: 16px; height: 16px; stroke: #fff; }
+  .card {
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+  .item-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .item-row:last-child { border-bottom: none; }
+  .item-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .dot-ok { background: #639922; }
+  .dot-low { background: #BA7517; }
+  .dot-out { background: #E24B4A; }
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .item-right { text-align: right; flex-shrink: 0; }
+  .item-stock { font-size: 15px; font-weight: 600; color: var(--text); }
+  .item-price { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .item-actions { display: flex; gap: 6px; margin-left: 6px; }
+  .icon-btn {
+    width: 32px; height: 32px; border-radius: var(--radius);
+    border: 0.5px solid var(--border2);
+    background: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text2);
+  }
+  .icon-btn svg { width: 16px; height: 16px; stroke: currentColor; }
+  .icon-btn:hover { background: var(--bg2); }
+  .icon-btn.del { color: var(--danger); border-color: var(--danger); }
+  .icon-btn.del:hover { background: var(--danger-bg); }
+  .badge {
+    display: inline-block; font-size: 11px; padding: 2px 8px;
+    border-radius: 99px; font-weight: 500;
+  }
+  .badge-ok { background: var(--green-bg); color: var(--green-text); }
+  .badge-low { background: var(--amber-bg); color: var(--amber-text); }
+  .badge-out { background: var(--red-bg); color: var(--red-text); }
+  .empty { text-align: center; padding: 3rem 1rem; color: var(--text3); font-size: 14px; }
+  .empty svg { width: 40px; height: 40px; stroke: var(--text3); margin-bottom: 12px; }
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex; align-items: flex-end; justify-content: center;
+    z-index: 200;
+  }
+  .sheet {
+    background: var(--bg);
+    border-radius: 16px 16px 0 0;
+    width: 100%; max-width: 500px;
+    padding: 1rem 1.25rem 2rem;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .sheet-handle {
+    width: 36px; height: 4px;
+    background: var(--border2);
+    border-radius: 99px;
+    margin: 0 auto 1rem;
+  }
+  .sheet h2 { font-size: 16px; font-weight: 600; margin-bottom: 1rem; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 5px; font-weight: 500; }
+  .field input, .field select {
+    width: 100%; height: 42px;
+    background: var(--bg2);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 0 12px;
+    font-size: 15px;
+    color: var(--text);
+    outline: none;
+  }
+  .field input:focus { border-color: var(--blue); background: var(--bg); }
+  .sheet-btns { display: flex; gap: 10px; margin-top: 1.25rem; }
+  .btn-cancel {
+    flex: 1; height: 44px; border-radius: var(--radius);
+    border: 0.5px solid var(--border2);
+    background: none; color: var(--text2);
+    font-size: 15px; cursor: pointer;
+  }
+  .btn-save {
+    flex: 2; height: 44px; border-radius: var(--radius);
+    border: none; background: var(--blue); color: #fff;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  .btn-save:hover { background: var(--blue-dark); }
+  .toast {
+    position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    background: #2C2C2A; color: #f0ede8;
+    padding: 10px 20px; border-radius: 99px;
+    font-size: 13px; z-index: 300;
+    opacity: 0; transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="icon-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+  </div>
+  <h1>Inventory</h1>
+  <button class="add-btn" id="btn-add" aria-label="Tambah barang">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Tambah
+  </button>
+</header>
+
+<div class="main">
+  <div class="stats" id="stats"></div>
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="Cari produk..." autocomplete="off" />
+    <select id="filter-cat"><option value="">Semua kategori</option></select>
+    <select id="filter-status">
+      <option value="">Semua status</option>
+      <option value="ok">Stok cukup</option>
+      <option value="low">Stok menipis</option>
+      <option value="out">Habis</option>
+    </select>
+  </div>
+  <div class="card" id="list"></div>
+</div>
+
+<div id="overlay-area"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'inventory_items';
+
+  function loadItems() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : defaultItems();
+    } catch(e) { return defaultItems(); }
+  }
+
+  function saveItems() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch(e) {}
+  }
+
+  function defaultItems() {
+    return [
+      {id:1, name:'Beras Pandan 5kg', cat:'Sembako', stock:42, buy:62000, sell:68000},
+      {id:2, name:'Minyak Goreng 2L', cat:'Sembako', stock:8, buy:28000, sell:32000},
+      {id:3, name:'Gula Pasir 1kg', cat:'Sembako', stock:0, buy:14000, sell:16500},
+      {id:4, name:'Sabun Cuci Piring', cat:'Kebersihan', stock:25, buy:9500, sell:12000},
+      {id:5, name:'Deterjen Bubuk 1kg', cat:'Kebersihan', stock:3, buy:18000, sell:22000},
+      {id:6, name:'Susu UHT 1L', cat:'Minuman', stock:30, buy:15000, sell:18500},
+      {id:7, name:'Teh Celup 25s', cat:'Minuman', stock:55, buy:8500, sell:11000},
+    ];
+  }
+
+  let items = loadItems();
+  let nextId = items.reduce((m,i)=>Math.max(m,i.id),0)+1;
+  let editId = null;
+
+  const rp = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+
+  function status(s) {
+    if (s===0) return {label:'Habis', cls:'badge-out', dot:'dot-out', key:'out'};
+    if (s<=5)  return {label:'Menipis', cls:'badge-low', dot:'dot-low', key:'low'};
+    return {label:'Cukup', cls:'badge-ok', dot:'dot-ok', key:'ok'};
+  }
+
+  function getCats() { return [...new Set(items.map(i=>i.cat))].sort(); }
+
+  function getFilter() {
+    return {
+      q: document.getElementById('search').value.toLowerCase(),
+      cat: document.getElementById('filter-cat').value,
+      st: document.getElementById('filter-status').value,
+    };
+  }
+
+  function filteredItems() {
+    const f = getFilter();
+    return items.filter(i=>{
+      const mQ = i.name.toLowerCase().includes(f.q)||i.cat.toLowerCase().includes(f.q);
+      const mC = !f.cat||i.cat===f.cat;
+      const mS = !f.st||status(i.stock).key===f.st;
+      return mQ&&mC&&mS;
+    });
+  }
+
+  function renderStats() {
+    const total = items.length;
+    const low = items.filter(i=>status(i.stock).key==='low').length;
+    const out = items.filter(i=>status(i.stock).key==='out').length;
+    const val = items.reduce((s,i)=>s+i.stock*i.buy,0);
+    document.getElementById('stats').innerHTML = [
+      {label:'Total produk', val: total, warn: false},
+      {label:'Nilai stok', val: rp(val), warn: false},
+      {label:'Stok menipis', val: low, warn: low>0},
+      {label:'Stok habis', val: out, warn: out>0},
+    ].map(s=>`<div class="stat">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-val${s.warn?' warn':''}">${s.val}</div>
+    </div>`).join('');
+  }
+
+  function renderCats() {
+    const sel = document.getElementById('filter-cat');
+    const cur = sel.value;
+    const cats = getCats();
+    sel.innerHTML = '<option value="">Semua kategori</option>' +
+      cats.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
+  }
+
+  function renderList() {
+    const rows = filteredItems();
+    const el = document.getElementById('list');
+    if (!rows.length) {
+      el.innerHTML = `<div class="empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+        </svg>
+        <div>Tidak ada produk ditemukan</div>
+      </div>`;
+      return;
+    }
+    el.innerHTML = rows.map(i=>{
+      const s = status(i.stock);
+      return `<div class="item-row">
+        <div class="item-dot ${s.dot}"></div>
+        <div class="item-info">
+          <div class="item-name">${i.name}</div>
+          <div class="item-meta">${i.cat} &middot; <span class="badge ${s.cls}">${s.label}</span></div>
+        </div>
+        <div class="item-right">
+          <div class="item-stock">${i.stock} pcs</div>
+          <div class="item-price">Jual ${rp(i.sell)}</div>
+        </div>
+        <div class="item-actions">
+          <button class="icon-btn" onclick="openEdit(${i.id})" aria-label="Edit">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="icon-btn del" onclick="deleteItem(${i.id})" aria-label="Hapus">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function openSheet(id) {
+    editId = id || null;
+    const item = id ? items.find(i=>i.id===id) : null;
+    const cats = getCats();
+    document.getElementById('overlay-area').innerHTML = `
+      <div class="overlay" id="overlay" onclick="closeSheet(event)">
+        <div class="sheet" onclick="event.stopPropagation()">
+          <div class="sheet-handle"></div>
+          <h2>${item ? 'Edit barang' : 'Tambah barang baru'}</h2>
+          <div class="field"><label>Nama produk *</label>
+            <input id="f-name" value="${item?item.name:''}" placeholder="cth: Beras 5kg" autocomplete="off" /></div>
+          <div class="field"><label>Kategori *</label>
+            <input id="f-cat" list="catlist" value="${item?item.cat:''}" placeholder="cth: Sembako" autocomplete="off" />
+            <datalist id="catlist">${cats.map(c=>`<option value="${c}">`).join('')}</datalist>
+          </div>
+          <div class="field"><label>Stok</label>
+            <input id="f-stock" type="number" min="0" value="${item?item.stock:0}" /></div>
+          <div class="field"><label>Harga beli (Rp)</label>
+            <input id="f-buy" type="number" min="0" value="${item?item.buy:0}" /></div>
+          <div class="field"><label>Harga jual (Rp)</label>
+            <input id="f-sell" type="number" min="0" value="${item?item.sell:0}" /></div>
+          <div class="sheet-btns">
+            <button class="btn-cancel" onclick="closeSheet()">Batal</button>
+            <button class="btn-save" onclick="saveItem()">Simpan</button>
+          </div>
+        </div>
+      </div>`;
+    setTimeout(()=>document.getElementById('f-name').focus(), 100);
+  }
+
+  window.openEdit = function(id) { openSheet(id); };
+  window.closeSheet = function(e) {
+    if (e && e.target.id !== 'overlay') return;
+    document.getElementById('overlay-area').innerHTML = '';
+    editId = null;
+  };
+  window.deleteItem = function(id) {
+    if (!confirm('Hapus barang ini dari inventory?')) return;
+    items = items.filter(i=>i.id!==id);
+    saveItems();
+    render();
+    showToast('Barang dihapus');
+  };
+  window.saveItem = function() {
+    const name = document.getElementById('f-name').value.trim();
+    const cat = document.getElementById('f-cat').value.trim();
+    const stock = Math.max(0, parseInt(document.getElementById('f-stock').value)||0);
+    const buy = Math.max(0, parseInt(document.getElementById('f-buy').value)||0);
+    const sell = Math.max(0, parseInt(document.getElementById('f-sell').value)||0);
+    if (!name||!cat) { alert('Nama produk dan kategori wajib diisi.'); return; }
+    if (editId) {
+      const idx = items.findIndex(i=>i.id===editId);
+      items[idx] = {id:editId, name, cat, stock, buy, sell};
+      showToast('Barang diperbarui');
+    } else {
+      items.push({id:nextId++, name, cat, stock, buy, sell});
+      showToast('Barang ditambahkan');
+    }
+    saveItems();
+    document.getElementById('overlay-area').innerHTML = '';
+    editId = null;
+    render();
+  };
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2000);
+  }
+
+  function render() {
+    renderStats();
+    renderCats();
+    renderList();
+  }
+
+  document.getElementById('btn-add').addEventListener('click', ()=>openSheet(null));
+  document.getElementById('search').addEventListener('input', renderList);
+  document.getElementById('filter-cat').addEventListener('change', renderList);
+  document.getElementById('filter-status').addEventListener('change', renderList);
+
+  render();
+})();
+</script>
+</body>
+</html>
